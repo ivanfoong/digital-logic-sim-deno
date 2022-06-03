@@ -31,7 +31,7 @@ export function xnor(a: ValidState, b: ValidState): ValidState {
 export function createDFFComponent(
   name: string,
   clk: string,
-  dIn: string
+  dIn: string,
 ): Array<Component> {
   return [
     {
@@ -71,7 +71,7 @@ export function createDFFEComponent(
   name: string,
   clk: string,
   dIn: string,
-  dEnable: string
+  dEnable: string,
 ): Array<Component> {
   const gatedClock: Component = {
     id: `${name}.clk`,
@@ -84,7 +84,7 @@ export function createDFFEComponent(
 }
 
 export function createComponentLookup(
-  components: Array<Component>
+  components: Array<Component>,
 ): Record<string, Component> {
   return components.reduce((output, item) => {
     output[item["id"]] = item;
@@ -94,21 +94,20 @@ export function createComponentLookup(
 
 export function evaluate(
   components: Array<Component>,
-  componentLookup: Record<string, Component>
+  componentLookup: Record<string, Component>,
 ) {
   function binaryOp(
     loginFn: (a: ValidState, b: ValidState) => ValidState,
-    component: Component
+    component: Component,
   ) {
     const aOut = componentLookup[component.inputs[0]];
     const bOut = componentLookup[component.inputs[1]];
 
-    component.state =
-      aOut.state === "x" || bOut.state === "x"
-        ? "x"
-        : loginFn(aOut.state, bOut.state);
+    component.state = aOut.state === "x" || bOut.state === "x"
+      ? "x"
+      : loginFn(aOut.state, bOut.state);
   }
-  components.forEach((component) => {
+  components.reverse().forEach((component) => {
     if (component.type === "custom") return;
     if (component.type === "and") return binaryOp(and, component);
     if (component.type === "nand") return binaryOp(nand, component);
@@ -120,6 +119,38 @@ export function evaluate(
       const aOut = componentLookup[component.inputs[0]];
       component.state = aOut.state === "x" ? "x" : not(aOut.state);
       return;
+    }
+    if (component.type === "tristate") {
+      const aOut = componentLookup[component.inputs[0]];
+      const enable = componentLookup[component.inputs[1]];
+      component.state = enable.state === 1 ? aOut.state : "x";
+      return;
+    }
+    if (component.type === "bus") {
+      const states = component.inputs.map((id) => componentLookup[id].state);
+      const validStates = states.filter((state) => state !== "x");
+      if (validStates.length > 1) {
+        // more than 1 input with valid state
+        const state0Count = validStates.filter((state) => state === 0).length;
+        const state1Count = validStates.filter((state) => state === 1).length;
+        if (state0Count === 0) {
+          component.state = 1;
+          return;
+        } else if (state1Count === 0) {
+          component.state = 0;
+          return;
+        } else {
+          // TODO conflicted state
+          component.state = "x";
+          return;
+        }
+      } else if (validStates.length === 1) {
+        component.state = validStates[0];
+        return;
+      } else {
+        component.state = "x";
+        return;
+      }
     }
   });
 }

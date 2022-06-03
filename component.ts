@@ -6,7 +6,7 @@ type Sample = Record<string, State>;
 
 type BaseComponentType = "not" | "and" | "nand" | "or" | "nor" | "xor" | "xnor";
 
-type ComponentType = BaseComponentType | "custom";
+type ComponentType = BaseComponentType | "custom" | "tristate" | "bus";
 
 interface Component {
   id: string;
