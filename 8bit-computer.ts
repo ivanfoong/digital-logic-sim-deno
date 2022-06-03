@@ -143,7 +143,8 @@ for (let iteration = 0; iteration < runFor; iteration++) {
     componentLookup.clock.state = not(componentLookup.clock.state);
   }
 
-  if (iteration === 2) { // write 0xFF to r1
+  if (iteration === 2) {
+    // write 0xFF to r1
     componentLookup["input_switch.dOut1"].state = 1;
     componentLookup["input_switch.dOut2"].state = 1;
     componentLookup["input_switch.dOut3"].state = 1;
@@ -155,15 +156,18 @@ for (let iteration = 0; iteration < runFor; iteration++) {
     componentLookup["write_register_switch.dOut1"].state = 1;
   } else if (iteration === 4) {
     componentLookup["write_register_switch.dOut1"].state = 0;
-  }
-
-  if (iteration % 2 === 0) {
+  } else if (iteration === 6) {
+    // copy r1 value to r2
     componentLookup["output_register_switch.dOut1"].state = 1;
-    componentLookup["output_register_switch.dOut2"].state = 0;
-  } else {
+    componentLookup["write_register_switch.dOut2"].state = 1;
+  } else if (iteration === 8) {
     componentLookup["output_register_switch.dOut1"].state = 0;
+    componentLookup["write_register_switch.dOut2"].state = 0;
+  } else if (iteration === 10) {
+    // show r2 value
     componentLookup["output_register_switch.dOut2"].state = 1;
   }
+
 
   for (let i = 0; i < EVALS_PER_STEP; i++) {
     evaluate(components, componentLookup);
@@ -179,7 +183,7 @@ trace
   .getTraces([
     "clock",
     "write_register_switch.dOut1",
-    // "write_register_switch.dOut2",
+    "write_register_switch.dOut2",
     // "write_register_switch.dOut3",
     // "write_register_switch.dOut4",
     // "write_register_switch.dOut5",
@@ -187,13 +191,13 @@ trace
     // "write_register_switch.dOut7",
     // "write_register_switch.dOut8",
     "input_switch.dOut1",
-    // "input_switch.dOut2",
-    // "input_switch.dOut3",
-    // "input_switch.dOut4",
-    // "input_switch.dOut5",
-    // "input_switch.dOut6",
-    // "input_switch.dOut7",
-    // "input_switch.dOut8",
+    "input_switch.dOut2",
+    "input_switch.dOut3",
+    "input_switch.dOut4",
+    "input_switch.dOut5",
+    "input_switch.dOut6",
+    "input_switch.dOut7",
+    "input_switch.dOut8",
     "output_register_switch.dOut1",
     "output_register_switch.dOut2",
     // "output_register_switch.dOut3",
@@ -202,29 +206,29 @@ trace
     // "output_register_switch.dOut6",
     // "output_register_switch.dOut7",
     // "output_register_switch.dOut8",
-    "r1.dOut1",
-    // "r1.dOut2",
-    // "r1.dOut3",
-    // "r1.dOut4",
-    // "r1.dOut5",
-    // "r1.dOut6",
-    // "r1.dOut7",
-    // "r1.dOut8",
-    "r2.dOut1",
-    // "r2.dOut2",
-    // "r2.dOut3",
-    // "r2.dOut4",
-    // "r2.dOut5",
-    // "r2.dOut6",
-    // "r2.dOut7",
-    // "r2.dOut8",
+    "r1.dffe1.q",
+    "r1.dffe2.q",
+    "r1.dffe3.q",
+    "r1.dffe4.q",
+    "r1.dffe5.q",
+    "r1.dffe6.q",
+    "r1.dffe7.q",
+    "r1.dffe8.q",
+    "r2.dffe1.q",
+    "r2.dffe2.q",
+    "r2.dffe3.q",
+    "r2.dffe4.q",
+    "r2.dffe5.q",
+    "r2.dffe6.q",
+    "r2.dffe7.q",
+    "r2.dffe8.q",
     "data_bus.d1",
-    // "data_bus.d2",
-    // "data_bus.d3",
-    // "data_bus.d4",
-    // "data_bus.d5",
-    // "data_bus.d6",
-    // "data_bus.d7",
-    // "data_bus.d8",
+    "data_bus.d2",
+    "data_bus.d3",
+    "data_bus.d4",
+    "data_bus.d5",
+    "data_bus.d6",
+    "data_bus.d7",
+    "data_bus.d8",
   ])
   .forEach((trace) => console.log(trace));
