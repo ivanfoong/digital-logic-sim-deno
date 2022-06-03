@@ -6,9 +6,10 @@ import {
   not,
   Trace,
 } from "./mod.ts";
+import { readline } from "https://deno.land/x/readline_sync/mod.ts";
+import { Cell, Table } from "https://deno.land/x/cliffy@v0.20.1/table/mod.ts";
 
 const EVALS_PER_STEP = 5;
-const runFor = 25;
 const trace = new Trace();
 
 function create8BitMemoryComponent(
@@ -138,7 +139,112 @@ const components: Array<Component> = [
 ];
 const componentLookup = createComponentLookup(components);
 
-for (let iteration = 0; iteration < runFor; iteration++) {
+function printTrace() {
+  // trace
+  //   .getAllTraces()
+  //   .forEach((trace) => console.log(trace));
+  trace
+    .getTraces([
+      "clock",
+      "write_register_switch.dOut1",
+      "write_register_switch.dOut2",
+      // "write_register_switch.dOut3",
+      // "write_register_switch.dOut4",
+      // "write_register_switch.dOut5",
+      // "write_register_switch.dOut6",
+      // "write_register_switch.dOut7",
+      // "write_register_switch.dOut8",
+      "input_switch.dOut1",
+      "input_switch.dOut2",
+      "input_switch.dOut3",
+      "input_switch.dOut4",
+      "input_switch.dOut5",
+      "input_switch.dOut6",
+      "input_switch.dOut7",
+      "input_switch.dOut8",
+      "output_register_switch.dOut1",
+      "output_register_switch.dOut2",
+      // "output_register_switch.dOut3",
+      // "output_register_switch.dOut4",
+      // "output_register_switch.dOut5",
+      // "output_register_switch.dOut6",
+      // "output_register_switch.dOut7",
+      // "output_register_switch.dOut8",
+      "r1.dffe1.q",
+      "r1.dffe2.q",
+      "r1.dffe3.q",
+      "r1.dffe4.q",
+      "r1.dffe5.q",
+      "r1.dffe6.q",
+      "r1.dffe7.q",
+      "r1.dffe8.q",
+      "r2.dffe1.q",
+      "r2.dffe2.q",
+      "r2.dffe3.q",
+      "r2.dffe4.q",
+      "r2.dffe5.q",
+      "r2.dffe6.q",
+      "r2.dffe7.q",
+      "r2.dffe8.q",
+      "data_bus.d1",
+      "data_bus.d2",
+      "data_bus.d3",
+      "data_bus.d4",
+      "data_bus.d5",
+      "data_bus.d6",
+      "data_bus.d7",
+      "data_bus.d8",
+    ])
+    .forEach((trace) => console.log(trace));
+}
+
+function printStates(iteration: number) {
+  const table = new Table();
+  table.push([
+    new Cell(`Step ${iteration}`).colSpan(2),
+  ]);
+  table.push(["clock", `${componentLookup["clock"].state}`]);
+  function get8BitStates(id_prefix: string, id_suffix = ""): string {
+    let bitString = "";
+    for (let i = 8; i > 0; i--) {
+      const id = `${id_prefix}${i}${id_suffix}`;
+      bitString = `${bitString}${componentLookup[id].state}`;
+    }
+    return bitString;
+  }
+
+  table.push(["input_switch", get8BitStates("input_switch.dOut")]);
+  table.push([
+    "write_register_switch",
+    get8BitStates("write_register_switch.dOut"),
+  ]);
+  table.push([
+    "output_register_switch",
+    get8BitStates("output_register_switch.dOut"),
+  ]);
+  table.push(["r1", get8BitStates("r1.dffe", ".q")]);
+  table.push(["r2", get8BitStates("r2.dffe", ".q")]);
+  table.push(["data_bus", get8BitStates("data_bus.d")]);
+  table.border(true).render();
+  console.log();
+}
+
+let iteration = 0;
+let done = false;
+while (!done) {
+  const promptOptions = ["Step", "Trace", "Halt"];
+  while (true) {
+    const selectedOptionIndex = readline.chooseOption(promptOptions, "Action?");
+    if (promptOptions[selectedOptionIndex] === "Halt") {
+      done = true;
+      break;
+    } else if (promptOptions[selectedOptionIndex] === "Trace") {
+      printTrace();
+    } else if (promptOptions[selectedOptionIndex] === "Step") {
+      break;
+    }
+  }
+
   if (componentLookup.clock.state !== "x") {
     componentLookup.clock.state = not(componentLookup.clock.state);
   }
@@ -168,67 +274,13 @@ for (let iteration = 0; iteration < runFor; iteration++) {
     componentLookup["output_register_switch.dOut2"].state = 1;
   }
 
-
   for (let i = 0; i < EVALS_PER_STEP; i++) {
     evaluate(components, componentLookup);
   }
 
   trace.sample(components);
-}
+  
+  printStates(iteration);
 
-// trace
-//   .getAllTraces()
-//   .forEach((trace) => console.log(trace));
-trace
-  .getTraces([
-    "clock",
-    "write_register_switch.dOut1",
-    "write_register_switch.dOut2",
-    // "write_register_switch.dOut3",
-    // "write_register_switch.dOut4",
-    // "write_register_switch.dOut5",
-    // "write_register_switch.dOut6",
-    // "write_register_switch.dOut7",
-    // "write_register_switch.dOut8",
-    "input_switch.dOut1",
-    "input_switch.dOut2",
-    "input_switch.dOut3",
-    "input_switch.dOut4",
-    "input_switch.dOut5",
-    "input_switch.dOut6",
-    "input_switch.dOut7",
-    "input_switch.dOut8",
-    "output_register_switch.dOut1",
-    "output_register_switch.dOut2",
-    // "output_register_switch.dOut3",
-    // "output_register_switch.dOut4",
-    // "output_register_switch.dOut5",
-    // "output_register_switch.dOut6",
-    // "output_register_switch.dOut7",
-    // "output_register_switch.dOut8",
-    "r1.dffe1.q",
-    "r1.dffe2.q",
-    "r1.dffe3.q",
-    "r1.dffe4.q",
-    "r1.dffe5.q",
-    "r1.dffe6.q",
-    "r1.dffe7.q",
-    "r1.dffe8.q",
-    "r2.dffe1.q",
-    "r2.dffe2.q",
-    "r2.dffe3.q",
-    "r2.dffe4.q",
-    "r2.dffe5.q",
-    "r2.dffe6.q",
-    "r2.dffe7.q",
-    "r2.dffe8.q",
-    "data_bus.d1",
-    "data_bus.d2",
-    "data_bus.d3",
-    "data_bus.d4",
-    "data_bus.d5",
-    "data_bus.d6",
-    "data_bus.d7",
-    "data_bus.d8",
-  ])
-  .forEach((trace) => console.log(trace));
+  iteration++;
+}
